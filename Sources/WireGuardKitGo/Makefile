@@ -42,6 +42,11 @@ $(BUILDDIR)/libwg-go-$(1).a: export GOARCH := $(GOARCH_$(1))
 $(BUILDDIR)/libwg-go-$(1).a: $(GOROOT)/.prepared go.mod
 	go build -ldflags=-w -trimpath -v -o "$(BUILDDIR)/libwg-go-$(1).a" -buildmode c-archive
 	rm -f "$(BUILDDIR)/libwg-go-$(1).h"
+	if [ "$(PLATFORM_NAME)" = "iphonesimulator" ] && [ "$(1)" = "arm64" ]; then \
+		$(CC) -c simulator_arm64_stubs.c -o "$(BUILDDIR)/simulator-arm64-stubs.o" \
+			-isysroot "$(SDKROOT)" -arch arm64 -DTARGET_OS_SIMULATOR=1; \
+		ar -r "$(BUILDDIR)/libwg-go-$(1).a" "$(BUILDDIR)/simulator-arm64-stubs.o"; \
+	fi
 endef
 $(foreach ARCH,$(ARCHS),$(eval $(call libwg-go-a,$(ARCH))))
 
